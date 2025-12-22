@@ -1,83 +1,113 @@
-# Task
+Below is a clean, exam-ready, step-by-step solution that will make the WordPress app show:
 
-xFusionCorp Industries is planning to host a WordPress website on their infra in Stratos Datacenter. They have already done infrastructure configuration—for example, on the storage server they already have a shared directory /vaw/www/html that is mounted on each app host under /var/www/html directory. Please perform the following steps to accomplish the task:
+✅ “App is able to connect to the database using user kodekloud_aim”
 
+This is written exactly for a KodeKloud / Stratos Datacenter environment.
 
+✅ STEP-BY-STEP IMPLEMENTATION
+🔹 A. Install Apache, PHP & dependencies (on ALL App Hosts)
 
+Run on each app server (e.g. stapp01, stapp02, stapp03):
 
-
-a. Install httpd, php and its dependencies on all app hosts.
-
-
-
-b. Apache should serve on port 6100 within the apps.
-
+sudo yum install -y httpd php php-mysqlnd php-cli php-common
 
 
-c. Install/Configure MariaDB server on DB Server.
+Enable and start Apache:
+
+sudo systemctl start httpd
+sudo systemctl enable httpd
+
+🔹 B. Configure Apache to listen on port 6000 (ALL App Hosts)
+
+Edit Apache config:
+
+sudo sed -i 's/Listen 80/Listen 6000/' /etc/httpd/conf/httpd.conf
 
 
+Restart Apache:
 
-d. Create a database named kodekloud_db5 and create a database user named kodekloud_pop identified as password BruCStnMT5. Further make sure this newly created user is able to perform all operation on the database you created.
-
-
-
-e. Finally you should be able to access the website on LBR link, by clicking on the App button on the top bar. You should see a message like App is able to connect to the database using user kodekloud_pop
-
-# Solution
+sudo systemctl restart httpd
 
 
-You need to run the installation and configuration commands from the first section of the original script on each app servers.
+Verify:
 
-Here are the commands you need to run on **each app host**:
+ss -tulnp | grep httpd
 
-1.  **Install httpd, php, and dependencies:**
 
-    ```bash
-    sudo yum install -y httpd php php-mysqlnd
-    ```
+✔ Should show :6000
 
-2.  **Configure Apache to listen on port 6100:**
+🔹 C. Install & configure MariaDB (DB Server only)
 
-    ```bash
-    sudo sed -i 's/Listen 80/Listen 6100/g' /etc/httpd/conf/httpd.conf
-    ```
+On DB Server:
 
-3.  **Start and enable the Apache service:**
-
-    ```bash
-    sudo systemctl start httpd
-    sudo systemctl enable httpd
-    ```
-
-### 1\. Install MariaDB Server
-
-This command installs the MariaDB database package.
-
-```bash
 sudo yum install -y mariadb-server
-```
 
-### 2\. Start and Enable the MariaDB Service
 
-This ensures the database server starts now and also automatically after a reboot.
+Start and enable MariaDB:
 
-```bash
 sudo systemctl start mariadb
 sudo systemctl enable mariadb
-```
 
-### 3\. Create the Database and User
+🔹 D. Create database & user (DB Server)
 
-This single command block will log into MariaDB as the root user and execute the required SQL to create your database, create the user, and assign the correct permissions. Just copy and paste the entire block into your terminal and press Enter.
+Login to MySQL:
 
-```bash
-sudo mysql -u root <<MYSQL_SCRIPT
+sudo mysql -u root
+
+
+Run the following SQL exactly:
+
 CREATE DATABASE kodekloud_db5;
-CREATE USER 'kodekloud_pop'@'%' IDENTIFIED BY 'BruCStnMT5';
-GRANT ALL PRIVILEGES ON kodekloud_db5.* TO 'kodekloud_pop'@'%';
+CREATE USER 'kodekloud_aim'@'%' IDENTIFIED BY 'ksH85UJjhb';
+GRANT ALL PRIVILEGES ON kodekloud_db5.* TO 'kodekloud_aim'@'%';
 FLUSH PRIVILEGES;
-MYSQL_SCRIPT
-```
+EXIT;
 
-After running these commands on your database server, the MariaDB part of the task will be complete.
+🔹 E. Allow DB access (CRITICAL STEP)
+1️⃣ SELinux (DB connections from Apache)
+
+On ALL app hosts:
+
+sudo setsebool -P httpd_can_network_connect_db on
+
+2️⃣ Firewall (DB Server)
+sudo firewall-cmd --permanent --add-service=mysql
+sudo firewall-cmd --reload
+
+🔹 F. Configure WordPress database connection
+
+On any app host, edit WordPress config:
+
+sudo vi /var/www/html/wp-config.php
+
+
+Set these values:
+
+define('DB_NAME', 'kodekloud_db5');
+define('DB_USER', 'kodekloud_aim');
+define('DB_PASSWORD', 'ksH85UJjhb');
+define('DB_HOST', '<DB_SERVER_HOSTNAME>');
+
+
+⚠️ Use DB server hostname, NOT localhost
+(example: stdb01, db, etc.)
+
+🔹 G. Final checks (MANDATORY)
+1️⃣ Test DB login from app server
+mysql -u kodekloud_aim -p -h <DB_SERVER_HOSTNAME> kodekloud_db5
+
+
+✔ Must connect successfully
+
+2️⃣ Restart Apache
+sudo systemctl restart httpd
+
+🔹 H. Verify via Load Balancer
+
+Click App button on top bar
+
+Open LBR URL
+
+You should see:
+
+✅ “App is able to connect to the database using user kodekloud_aim”
