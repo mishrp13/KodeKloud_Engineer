@@ -1,83 +1,55 @@
-# Task
-xFusionCorp Industries is planning to host two static websites on their infra in Stratos Datacenter. The development of these websites is still in-progress, but we want to get the servers ready. Please perform the following steps to accomplish the task:
+🔹 Step 1: Login to App Server 3
+
+From jump_host:
+
+ssh tony@app03
+
+
+(Username may vary in your lab; use the correct one.)
+
+🔹 Step 2: Install Apache (httpd)
+sudo yum install -y httpd
+
+
+Verify:
+
+httpd -v
+
+🔹 Step 3: Configure Apache to listen on port 8088
+
+Edit Apache config:
+
+sudo vi /etc/httpd/conf/httpd.conf
+
+Change this line:
+Listen 80
+
+To:
+Listen 8088
+
+
+Save and exit.
+
+🔹 Step 4: Copy website backups from jump_host
+
+From jump_host, copy directories to app server 3:
+
+scp -r /home/thor/beta tony@app03:/tmp/
+scp -r /home/thor/apps tony@app03:/tmp/
+
+🔹 Step 5: Place websites in Apache document root
+
+On app server 3:
+
+sudo mv /tmp/beta /var/www/html/
+sudo mv /tmp/apps /var/www/html/
+
+
+Set proper permissions:
+
+sudo chown -R apache:apache /var/www/html/beta /var/www/html/apps
+sudo chmod -R 755 /var/www/html/beta /var/www/html/apps
 
 
 
-
-
-a. Install httpd package and dependencies on app server 2.
-
-
-
-b. Apache should serve on port 6300.
-
-
-
-c. There are two website's backups /home/thor/media and /home/thor/games on jump_host. Set them up on Apache in a way that media should work on the link  http://localhost:6300/media/  and games should work on link  http://localhost:6300/games/  on the mentioned app server.
-
-
-
-d. Once configured you should be able to access the website using curl command on the respective app server, i.e curl http://localhost:6300/media/  and  curl http://localhost:6300/games/
-
-# Solution
-
-### Step 1: On the `jump_host`
-
-This single command copies the website directories from the `jump_host` to `app server 2`.
-
-
-```bash
-scp -r /home/thor/media /home/thor/games steve@stapp02:/tmp
-```
-
------
-
-### Step 2: On `app server 2`
-
-After copying the files, SSH into `app server 2` and run the following commands in order.
-
-1.  **Install Apache (httpd):**
-
-    ```bash
-    sudo yum install -y httpd
-    ```
-
-2.  **Configure Apache to use port 6300:**
-
-    ```bash
-    sudo sed -i 's/Listen 80/Listen 6300/g' /etc/httpd/conf/httpd.conf
-    ```
-
-3.  **Move the website files to the Apache web directory:**
-
-    ```bash
-    sudo mv /tmp/media /var/www/html/
-    sudo mv /tmp/games /var/www/html/
-    ```
-
-4.  **Start and enable the Apache service:**
-
-    ```bash
-    sudo systemctl start httpd
-    sudo systemctl enable httpd
-    ```
-
------
-
-### Step 3: Verify the Setup (on `app server 2`)
-
-Finally, run these `curl` commands on `app server 2` to confirm that both websites are being served correctly.
-
-1.  **Check the `media` website:**
-
-    ```bash
-    curl http://localhost:6300/media/
-    ```
-
-2.  **Check the `games` website:**
-
-    ```bash
-    curl http://localhost:6300/games/
-    ```
-
-After running these commands, your setup will be complete and verified.
+sudo vi /etc/httpd/conf/httpd
