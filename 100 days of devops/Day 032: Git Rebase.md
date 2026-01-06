@@ -1,45 +1,65 @@
-# Instructions
+1️⃣ Go to the repository
+cd /usr/src/kodekloudrepos
 
-The Nautilus application development team has been working on a project repository `/opt/media.git`. This repo is cloned at `/usr/src/kodekloudrepos` on `storage server` in `Stratos DC`. They recently shared the following requirements with DevOps team:
+2️⃣ Fetch latest changes
 
-One of the developers is working on `feature` branch and their work is still in progress, however there are some changes which have been pushed into the `master` branch, the developer now wants to `rebase` the `feature` branch with the `master` branch without loosing any data from the `feature` branch, also they don't want to add any `merge commit` by simply merging the `master` branch into the `feature` branch. Accomplish this task as per requirements mentioned.
+Always do this first to ensure your local repo is up to date.
 
-Also remember to push your changes once done.
+git fetch origin
 
-# Solution
+3️⃣ Switch to the feature branch
+git checkout feature
 
-`ssh natasha@ststor01`
 
-`cd /usr/src/kodekloudrepos/media`
+This is the branch that needs to be rebased.
 
-`git status`
+4️⃣ Rebase feature branch onto master
+git rebase origin/master
 
-- This command displays the current status of the Git repository, including the active branch, any modified files, and any untracked files.
+What this does
 
-`sudo git checkout feature-branch`
+Takes all feature branch commits
 
-- This command switches the active branch to the "feature-branch" branch.
+Re-applies them on top of the latest master
 
-`sudo git rebase master feature`
+Keeps history linear
 
-- This command performs a rebase operation of the "feature-branch" branch with the "master" branch.
+No merge commit is created
 
-`sudo git push origin feature`
+Feature branch work is preserved
 
-- This command pushes the "feature-branch" branch to the remote repository (origin).
+5️⃣ Resolve conflicts (if any)
 
-`sudo git pull origin feature`
+If Git stops due to conflicts:
 
-- This command pulls the latest changes from the "feature-branch" branch in the remote repository (origin).
+Fix the conflicted files
 
-`sudo git config pull.rebase true`
+Stage the fixes:
 
-- This command sets the pull.rebase configuration option to true for the Git repository.
+git add <file-name>
 
-`sudo git pull origin feature`
 
-- This command pulls the latest changes from the "feature-branch" branch in the remote repository (origin), and automatically rebases your local branch on top of the remote branch.
+Continue rebase:
 
-`sudo git push origin feature`
+git rebase --continue
 
-- This command pushes the "feature-branch" branch, with the rebase changes, to the remote repository (origin).
+
+If you need to abort (rare):
+
+git rebase --abort
+
+6️⃣ Push the rebased feature branch
+
+Since rebase rewrites commit history, you must force push.
+
+git push origin feature --force
+
+
+✅ This updates the remote feature branch safely.
+
+🔑 Important Notes (Why this is correct)
+Requirement	How it’s satisfied
+No data loss	Rebase reapplies feature commits
+No merge commit	Rebase keeps linear history
+Feature updated with master	Rebasing onto master
+Changes pushed	Force push after rebase
